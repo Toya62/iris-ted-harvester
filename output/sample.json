@@ -1,0 +1,490 @@
+[
+ {
+  "source_system": "ted",
+  "source_record_id": "674773-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "France – High-voltage cable – Fourniture de 1500 m de câble Haute Tension A (HTA)",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/674773-2026/html",
+  "country_code": "FRA",
+  "nuts_codes": [
+   "FR104",
+   "FRA",
+   "FR104",
+   "FRA"
+  ],
+  "x": 1334.37,
+  "y": 5395854.46,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid FR104",
+  "content_hash": "35924d7345cb69c72bd37dfc169ed641d2d1b974443205b886e0546113415aa2"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "674777-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Croatia – Construction work for water and sewage pipelines – Izgradnja linijskih objekata aglomeracije Karlovac - Duga Resa",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/674777-2026/html",
+  "country_code": "HRV",
+  "nuts_codes": [
+   "HR027",
+   "HRV",
+   "HR027",
+   "HRV"
+  ],
+  "x": 1009014.68,
+  "y": 5036278.58,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid HR027",
+  "content_hash": "ac39f2a7d344eb879e72aaeb11638b540589c0f2878992cb9c5b5c33e32ce04b"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "674804-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Germany – Building construction work – Digitalpakt Schulen NRW, 0162 KGS Franziskus Remscheid",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/674804-2026/html",
+  "country_code": "DEU",
+  "nuts_codes": [
+   "DEA18",
+   "DEU",
+   "DEA18",
+   "DEU"
+  ],
+  "x": 376218.83,
+  "y": 5670540.23,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid DEA18",
+  "content_hash": "dbfb745e1fd09f3dcf687682a06e6e304e96049a1719eb789eeba3c99624af5d"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675017-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Germany – Building construction work – Digitalpakt Schulen NRW, 0200 Heinrich-Neumann-Schule Remscheid",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675017-2026/html",
+  "country_code": "DEU",
+  "nuts_codes": [
+   "DEA18",
+   "DEU",
+   "DEA18",
+   "DEU"
+  ],
+  "x": 376218.83,
+  "y": 5670540.23,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid DEA18",
+  "content_hash": "60b134aab17b0055a9c09a50ab0f936f8f4b8cb12f9d448f8bee261105c04744"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675126-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Poland – Construction work – Roboty budowlane związane z „Przebudowa drogi wojewódzkiej Nr 662 na odcinku Augustów – Suwałki od km 2+000 do km 2+590” w ramach zadania inwestycyjnego „Rozwój transgranicznej dostępności i mobilności infrastruktury drogowej województwa podlaskiego i obwodu wołyńskiego.",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675126-2026/html",
+  "country_code": "POL",
+  "nuts_codes": [
+   "PL841",
+   "POL",
+   "PL841",
+   "POL"
+  ],
+  "x": 1453572.03,
+  "y": 5995557.97,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid PL841",
+  "content_hash": "354c2f48665a7d9ee9d2610a38a73c80dfa2217d0db9ed21dfcecd8559e44515"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675294-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Slovakia – Track construction works – Modernizácia električkových tratí MET v meste Košice, 2. etapa, UČS 17 a UČS 18",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675294-2026/html",
+  "country_code": "SVK",
+  "nuts_codes": [
+   "SK042",
+   "SVK",
+   "SK042",
+   "SVK"
+  ],
+  "x": 1365784.51,
+  "y": 5470359.53,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid SK042",
+  "content_hash": "ec4dad6fc8c23a1037e10f009277950027de0574488109a75e974294dd5ed006"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675325-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Poland – Construction work for power plant – Wykonanie robót budowlanych w formule zaprojektuj i wybuduj: Projektowanie, dostawa i budowa :instalacji fotowoltaicznej pn. PV Skalin 1 o mocy zainstalowanej do 5,61MW;instalacji fotowoltaicznej pn.PV Gryfice 2 o mocy zainstalowanej do 9MW; Projektowanie, dostawa i budowa Magazynu Energii Elektrycznej pn.ME Skalin 1 o mocy zainstalowanej 4,472MW; ME Gryfice 2 o mocy zainstalowanej8,944MW",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675325-2026/html",
+  "country_code": "POL",
+  "nuts_codes": [
+   "PL428",
+   "POL",
+   "PL428",
+   "POL"
+  ],
+  "x": 886679.63,
+  "y": 5940251.81,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid PL428",
+  "content_hash": "1ae32f779116c680f7adaad99bf69470d0478db425a8cf2fcaa44e26f2b40d61"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675503-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "France – Works for complete or part construction and civil engineering work – BCAZ - Travaux - Conception - Réalisation (EPC) HTA et HTB (Formalisé)",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675503-2026/html",
+  "country_code": "FRA",
+  "nuts_codes": [
+   "FRD22",
+   "FRA",
+   "FRD22",
+   "FRA"
+  ],
+  "x": -72138.06,
+  "y": 5531732.48,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid FRD22",
+  "content_hash": "4a411d592c7116e113525ca54fa3838e52874fe9c9dcd7c3c26410b0bed4e8b9"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675568-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Estonia – Medium-voltage cable – Keskpinge maakaabli ristlõikega 240 mm² ostmine (IP8549, IP8754, IP8292)",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675568-2026/html",
+  "country_code": "EST",
+  "nuts_codes": [
+   "EE009",
+   "EE00A",
+   "EE004",
+   "EE008",
+   "EE001",
+   "EST",
+   "EST",
+   "EST",
+   "EST",
+   "EST",
+   "EE009",
+   "EE00A",
+   "EE004",
+   "EE008",
+   "EE001",
+   "EST",
+   "EST",
+   "EST",
+   "EST",
+   "EST"
+  ],
+  "x": null,
+  "y": null,
+  "geo_status": "ambiguous",
+  "geo_note": "multiple NUTS-3 regions: EE001,EE004,EE008,EE009,EE00A",
+  "content_hash": "55e7ab9491bfae5ff996474517e400478b94a9d7a428caf420403fc08ff926b1"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675867-2026",
+  "signal_types": [
+   "grid_cabling"
+  ],
+  "title": "Czechia – Road lights – Doplnění skladu 09/2026",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675867-2026/html",
+  "country_code": "CZE",
+  "nuts_codes": [
+   "CZ051",
+   "CZE",
+   "CZ051",
+   "CZE"
+  ],
+  "x": 921466.82,
+  "y": 5637361.69,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid CZ051",
+  "content_hash": "6ff5c9a9818ed9a1d9e0550387554c641945a1fc737db09c572dc0bda445529d"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "674900-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Bulgaria – Transformers – „Доставка на трифазни маслонапълнени разпределителни херметизирани трансформатори до 800 kVA, 20/ 0,4 kV - склад „Левски“, след сключени рамкови споразумения\", PPD 26-074",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/674900-2026/html",
+  "country_code": "BGR",
+  "nuts_codes": [
+   "BG314",
+   "BGR",
+   "BG314",
+   "BGR"
+  ],
+  "x": 1762738.49,
+  "y": 4933609.16,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid BG314",
+  "content_hash": "884a26cb2d4205ea9d049b91b2001966141aaaff8b1a3c068d8685218167c6e4"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "675024-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Slovakia – Hydro-electric plant construction work – Inovácia a modernizácia Vodnej elektrárne Čunovo",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/675024-2026/html",
+  "country_code": "SVK",
+  "nuts_codes": [
+   "SK010",
+   "SVK",
+   "SK010",
+   "SVK"
+  ],
+  "x": 1104980.32,
+  "y": 5381889.85,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid SK010",
+  "content_hash": "f9abee9275826ac5c42ef6fe8a21228e6cd68bcc34d90b1cdb7aeacddc0551fd"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "676673-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Ireland – Electrical installations for railways – 9436 Replacement 38kV Transaction Transformer",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/676673-2026/html",
+  "country_code": "IRL",
+  "nuts_codes": [
+   "IE061",
+   "IRL",
+   "IE061",
+   "IRL"
+  ],
+  "x": -513297.01,
+  "y": 6026457.94,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid IE061",
+  "content_hash": "453f9017554dfb07804f595730ed79a9b3a098c7efe17db379f0de6787487397"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "676976-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Germany – Liquid dielectric transformers – Lieferung von Verteilnetztransformatoren MS/NS",
+  "published_at": "2026-10-01",
+  "source_url": "https://ted.europa.eu/en/notice/676976-2026/html",
+  "country_code": "DEU",
+  "nuts_codes": [
+   "DEU",
+   "DEU",
+   "DEU",
+   "DEU"
+  ],
+  "x": null,
+  "y": null,
+  "geo_status": "unresolved",
+  "geo_note": "country or coarse level only",
+  "content_hash": "42ed4ce0174f55edcd3b77ef99397e998075e2b8e5b13bb6ed47c38e3f04ba0b"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "678596-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Bulgaria – Transformers – Доставка, монтаж и въвеждане в експлоатация на 1 /един/ брой трифазен маслен трансформатор 100 MVA, 115/11kV",
+  "published_at": "2026-10-02",
+  "source_url": "https://ted.europa.eu/en/notice/678596-2026/html",
+  "country_code": "BGR",
+  "nuts_codes": [
+   "BG314",
+   "BGR",
+   "BG314",
+   "BGR"
+  ],
+  "x": 1762738.49,
+  "y": 4933609.16,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid BG314",
+  "content_hash": "093ea7d940c2e16775cdff8b650a090c9eb5d41fb37c66c70b75989890d25b64"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "678611-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Germany – Transformers – Lieferung und Einbringung von 3x Sternpunktbildner mit stufenlos regelbarer Erdschlussspule in einem gemeinsamen Kessel für Freiluft- und Innenraumaufstellung 4000kVA",
+  "published_at": "2026-10-02",
+  "source_url": "https://ted.europa.eu/en/notice/678611-2026/html",
+  "country_code": "DEU",
+  "nuts_codes": [
+   "DE125",
+   "DEU",
+   "DE125",
+   "DEU"
+  ],
+  "x": 478552.85,
+  "y": 5472240.16,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid DE125",
+  "content_hash": "1c1605d8cf73c26645f0d57cf1ed5d143504ac4e80581d28a85f6f974b48b427"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "678656-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Finland – Transformers – LOPULLINEN TARJOUSPYYNTÖ: Kauttuan 118/21 kV, 31,5 MVA päämuuntajan toimitus ja asennus (vain aiemmin menettelyyn mukaan valitut osallistujat)",
+  "published_at": "2026-10-02",
+  "source_url": "https://ted.europa.eu/en/notice/678656-2026/html",
+  "country_code": "FIN",
+  "nuts_codes": [
+   "FI196",
+   "FIN",
+   "FI196",
+   "FIN"
+  ],
+  "x": 1195655.59,
+  "y": 6892257.92,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid FI196",
+  "content_hash": "9bb506a0c9d66921050e9411e70b69d41a72153f93906491660ba656fc887486"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "680537-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Denmark – Repair, maintenance and associated services related to railways and other equipment – Vedligehold af forsyning af kørestrøm og togforvarmestationer",
+  "published_at": "2026-10-02",
+  "source_url": "https://ted.europa.eu/en/notice/680537-2026/html",
+  "country_code": "DNK",
+  "nuts_codes": [
+   "DNK",
+   "DNK",
+   "DNK"
+  ],
+  "x": null,
+  "y": null,
+  "geo_status": "unresolved",
+  "geo_note": "country or coarse level only",
+  "content_hash": "f8b9f43d261b8157008baf98063f90e3e5a9c7e950ad5c085a5a8fb5731bf164"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "681253-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Poland – Electrical equipment and apparatus – Dostawa magnetronowych źródeł plazmy wraz z systemami zasilania",
+  "published_at": "2026-10-02",
+  "source_url": "https://ted.europa.eu/en/notice/681253-2026/html",
+  "country_code": "POL",
+  "nuts_codes": [
+   "PL921",
+   "POL",
+   "PL921",
+   "POL"
+  ],
+  "x": 1346859.16,
+  "y": 5768307.33,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid PL921",
+  "content_hash": "2c7e13b6915e7464933b15dc08194933d9f835fb43338c1dbd59c1943d387696"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "681481-2026",
+  "signal_types": [
+   "transformers"
+  ],
+  "title": "Ireland – Construction work for electricity power lines – The MaresConnect 750MW HVDC Interconnector System",
+  "published_at": "2026-10-05",
+  "source_url": "https://ted.europa.eu/en/notice/681481-2026/html",
+  "country_code": "IRL",
+  "nuts_codes": [
+   "IE061",
+   "IRL",
+   "GBR",
+   "IE061",
+   "IE061",
+   "IE061",
+   "IEZZZ",
+   "IE061",
+   "IRL",
+   "GBR",
+   "IRL",
+   "IRL",
+   "IRL",
+   "GBR",
+   "IRL"
+  ],
+  "x": null,
+  "y": null,
+  "geo_status": "ambiguous",
+  "geo_note": "multiple NUTS-3 regions: IE061,IEZZZ",
+  "content_hash": "91d2e612acf73e688d83524a58c4faf2a946079f4838ac0a58b8827b3981ea3a"
+ },
+ {
+  "source_system": "ted",
+  "source_record_id": "705075-2026",
+  "signal_types": [
+   "public_data_centre"
+  ],
+  "title": "Switzerland – Computer equipment and supplies – Data centre rack and cooling components",
+  "published_at": "2026-10-13",
+  "source_url": "https://ted.europa.eu/en/notice/705075-2026/html",
+  "country_code": "CHE",
+  "nuts_codes": [
+   "CH033",
+   "CHE",
+   "CH033",
+   "CHE"
+  ],
+  "x": 436202.11,
+  "y": 5251205.08,
+  "geo_status": "resolved",
+  "geo_note": "NUTS-3 region centroid CH033",
+  "content_hash": "0f3ae81d55ed7ac22ce1378107303ac044c3f604d2da2359a4da550b9235161f"
+ }
+]

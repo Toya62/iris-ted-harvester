@@ -21,3 +21,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "integration: integration tests requiring a live PostgreSQL/PostGIS database",
+]

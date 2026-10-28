@@ -148,3 +148,50 @@ def test_harvest_reports_category_error(monkeypatch):
     from datetime import date
     recs, rep = harvest(date(2026, 10, 1), None, CENT, 5)
     assert recs == [] and len(rep["category_errors"]) == 3
+
+
+def test_config_queries_syntax():
+    from datetime import date
+    from ted_harvester import config
+    qs = config.queries(date(2026, 10, 1), date(2026, 10, 31))
+    assert "grid_cabling" in qs and "transformers" in qs and "public_data_centre" in qs
+    assert "3132*" in qs["grid_cabling"] and "45231400" in qs["grid_cabling"]
+    assert "3117*" in qs["transformers"]
+    assert "data centre" in qs["public_data_centre"]
+    assert "publication-date>=20261001 AND publication-date<=20261031" in qs["grid_cabling"]
+
+
+def test_url_fallback():
+    # Direct htmlDirect ENG
+    n1 = {"publication-number": "1", "links": {"htmlDirect": {"ENG": "https://ted.example.com/direct"}}}
+    r1, _ = normalize(n1, "grid_cabling", CENT)
+    assert r1["source_url"] == "https://ted.example.com/direct"
+
+    # Fallback to html DEU
+    n2 = {"publication-number": "2", "links": {"html": {"DEU": "https://ted.example.com/deu"}}}
+    r2, _ = normalize(n2, "grid_cabling", CENT)
+    assert r2["source_url"] == "https://ted.example.com/deu"
+
+    # Default fallback
+    n3 = {"publication-number": "3"}
+    r3, _ = normalize(n3, "grid_cabling", CENT)
+    assert r3["source_url"] == "https://ted.europa.eu/en/notice/-/detail/3"
+
+
+def test_content_hash_sensitivity():
+    r1, _ = normalize(notice("1", title={"eng": "Alpha"}), "grid_cabling", CENT)
+    r2, _ = normalize(notice("1", title={"eng": "Alpha"}), "grid_cabling", CENT)
+    r3, _ = normalize(notice("1", title={"eng": "Beta"}), "grid_cabling", CENT)
+    m1 = merge([r1])
+    m2 = merge([r2])
+    m3 = merge([r3])
+    assert m1[0]["content_hash"] == m2[0]["content_hash"]
+    assert m1[0]["content_hash"] != m3[0]["content_hash"]
+
+
+def test_load_centroids(tmp_path):
+    p = tmp_path / "centroids.csv"
+    p.write_text("nuts_id,lon,lat\nDEA18,7.19,51.18\n", encoding="utf-8")
+    loaded = geo.load_centroids(str(p))
+    assert loaded == {"DEA18": (7.19, 51.18)}
+

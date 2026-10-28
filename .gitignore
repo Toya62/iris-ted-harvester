@@ -4,4 +4,4 @@ __pycache__/
 .venv/
 *.egg-info/
 data/nuts3_centroids.csv
-output/
+

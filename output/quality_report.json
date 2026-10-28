@@ -1,0 +1,18 @@
+{
+  "raw_notices": 21,
+  "unique_records": 21,
+  "by_signal_type": {
+    "grid_cabling": 10,
+    "transformers": 10,
+    "public_data_centre": 1
+  },
+  "geo": {
+    "resolved": 17,
+    "ambiguous: multiple NUTS-3 regions: EE001,EE004,EE008,EE009,EE00A": 1,
+    "unresolved: country or coarse level only": 2,
+    "ambiguous: multiple NUTS-3 regions: IE061,IEZZZ": 1
+  },
+  "field_issues": {},
+  "category_errors": {},
+  "load": null
+}

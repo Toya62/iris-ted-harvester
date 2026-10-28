@@ -24,10 +24,14 @@ def _as_list(v):
 
 
 def _url(n, pid):
-    html = (n.get("links") or {}).get("htmlDirect") or {}
+    links = n.get("links") or {}
+    html = links.get("htmlDirect") or links.get("html") or {}
     for k in ("ENG", "DEU"):
         if html.get(k):
             return html[k]
+    for v in html.values():
+        if isinstance(v, str) and v:
+            return v
     return f"https://ted.europa.eu/en/notice/-/detail/{pid}"
 
 
