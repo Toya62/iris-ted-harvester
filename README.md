@@ -1,52 +1,39 @@
-# iris-ted-harvester (IRIS-SIG-50)
+# IRIS-SIG-50: TED infrastructure notices to PostGIS
 
-Harvests EU public procurement notices from the TED Search API v3 into `iris_staging.signal_ingest` (PostgreSQL 16 / PostGIS 3.4, point geometry in EPSG:25832).
+Harvests EU public procurement notices (grid cabling, transformers, public data centres) from Tenders Electronic Daily and loads them idempotently into `iris_staging.signal_ingest` (PostgreSQL 16 / PostGIS 3.4, EPSG:25832). The original brief is in `docs/ASSIGNMENT.md`.
 
-## Assignment requirements (from the brief) and how each is met
+## Data source
+- The brief names `https://ted.europa.eu/api/v2.0/notices/search`. That endpoint is obsolete: in my earlier check it returned HTTP 202 with an empty HTML body. The harvester rejects any non-JSON/202 response instead of treating it as empty.
+- Alternative used: the public TED Search API v3, `POST https://api.ted.europa.eu/v3/notices/search` (anonymous search, token pagination). Verify access and field names against the current TED API documentation before production use.
 
-| Requirement | Implementation |
+## Filters
+| Signal type | Query |
 |---|---|
-| Objective: notices above EU thresholds for grid cabling, transformers, public DCs | `domain.py`: three categories queried separately, results merged per notice. TED notices are by definition EU-level procurement. |
-| Confirm current source format | The brief names `https://ted.europa.eu/api/v2.0/notices/search`. That endpoint is obsolete (answers HTTP 202 without JSON). The client targets the current v3 endpoint `https://api.ted.europa.eu/v3/notices/search` and raises `TedFormatError` if a non-JSON/202 response is ever returned. |
-| Preserve identifiers, titles, dates, URLs, geographic context | `publication-number`, `notice-title`, `publication-date`, HTML link, NUTS codes, city, CPV codes, buyer, plus the full raw payload (JSONB). |
-| Idempotent load into PostgreSQL/PostGIS | `UNIQUE (source_system, source_record_id)` + upsert that updates only when `content_hash` changes. |
-| EPSG:25832 points, document unresolved | NUTS-3 representative point transformed with pyproj. Unresolved cases keep a machine-readable reason. |
-| Pagination, network failure, duplicates, malformed data, empty responses | Token (ITERATION) pagination; retry/backoff on network errors, 408/425/429/5xx, honours Retry-After; duplicate collapse; strict response checks; empty responses counted. |
-| No credentials in code | Environment variables only (`.env.example`). |
-| README, tests, sample output, validation queries, error/quality report | This file; `tests/`; `sql/002_validation_queries.sql`; JSON report printed and written on each run. |
-| Invalid coordinates not silently accepted | `validate_lonlat` rejects non-numeric, NaN, out-of-range and (0,0); database CHECK constraints repeat the range and geom/status rules. |
+| grid_cabling | CPV 3132* or 45231400 |
+| transformers | CPV 3117* |
+| public_data_centre | full-text: data centre / data center / Rechenzentrum (no dedicated CPV code) |
 
-## Domain filter
-- grid_cabling: CPV 3132* and 45231400
-- transformers: CPV 3117*
-- public_data_centre: no CPV code exists, so full-text match on "data centre", "data center", "Rechenzentrum", "datacenter". Expect false positives; review with the domain owner.
-- Country filter defaults to DEU via `place-of-performance-country-proc` (`TED_COUNTRIES`, or `--countries ALL`).
+## Mapping and geocoding
+- publication-number is the source id; title prefers English; URL from links, else the TED detail page.
+- Place of performance gives NUTS codes. A point is created only when exactly one NUTS-3 region is listed (Eurostat GISCO label point, projected to EPSG:25832). Country-level, coarse or multi-region notices get no geometry; the reason is stored in `geo_note`.
+- Coordinates are validated (finite, Europe extent); invalid ones are never stored.
+- Upsert on `(source_system, source_record_id)`; rows change only if `content_hash` changes.
 
 ## Run
 ```
-pip install -e ".[dev]"
-python scripts/build_nuts_centroids.py          # needs `pip install shapely`; writes data/nuts3_centroids.csv
-ted-harvester --dry-run --since 2026-10-01 --until 2026-10-27 --out out   # no database
-export DATABASE_URL=postgresql://user:pass@host/db
-ted-harvester --init-db                          # creates schema, then loads incrementally (DB watermark minus overlap)
-pytest -q                                        # unit tests
-TED_TEST_DSN=postgresql://... pytest -m integration
+pip install -e .[dev]
+python scripts/build_nuts3_centroids.py        # downloads centroid data
+psql -f sql/schema.sql
+cp .env.example .env                           # set TED_DSN
+ted-harvest --since 2026-10-01 --dry-run       # no database
+ted-harvest --since 2026-10-01                 # load
+psql -f sql/validation.sql
+pytest
 ```
-Without the centroid CSV every location is reported as unresolved (a warning is logged).
+The CLI prints a JSON quality report (counts, geo status, field issues, per-category errors) and writes `output/sample.json`.
 
-## Mapping assumptions
-- Title: English preferred, then German, then any language; language stored in `title_lang`.
-- Location: exactly one NUTS-3 code in `place-of-performance` resolves to the representative point of that region (precision is regional, not site-level). Country-level only, NUTS-2 only, several NUTS-3 codes, unknown codes and invalid gazetteer coordinates stay unresolved with `location_note`.
-- Quality: `invalid` = missing title or invalid publication date (reported and stored in the reject table, not loaded); `warning` = missing CPV, unresolved location or out-of-area point; otherwise `ok`.
-- Notices found by several categories are merged into one row with all categories.
-
-## Status of verification (read this)
-- Unit tests were run in a development sandbox: 38 passed before two test assertions about the report's `load` counters were corrected in this commit (code unchanged). The corrected tests, the CI run on GitHub, the live API call, `build_nuts_centroids.py` and the PostgreSQL path have NOT been re-run on this exact commit. Check the CI result first.
-- An earlier version of this project, run against the live TED API for 2026-10-01 to 2026-10-27 (DEU), fetched 127 raw notices; 40 were processed, of which 36 got a location and 4 stayed unresolved. That earlier code is not what is in this repo, so no sample output file is included. Generate one with the dry-run command above.
-- The PostgreSQL upsert (`xmax = 0` insert detection) is untested against a real database.
-
-## Known limitations
-- Regional precision only; no address geocoding.
-- Data-centre detection is text-based.
-- `--limit` is applied after fetching.
-- TED ITERATION mode is documented for up to roughly 15,000 hits per query; narrow `TED_WINDOW_DAYS` if a window approaches that.
+## Status and limitations
+- Tests use mocks/fixtures only. This branch has not yet been run end to end: tests, the live TED v3 query syntax and field names, and the SQL against a real PostGIS are unverified.
+- Locations are region-level, not site-level.
+- The CPV filter can return loosely related works notices; the data-centre text query may be noisy.
+- Only the first notice-language title is kept when no English one exists.

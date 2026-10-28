@@ -1,96 +1,75 @@
-"""Map a raw TED notice to a staging record dict. Missing fields are recorded as quality issues, never invented."""
-from __future__ import annotations
-
 import hashlib
 import json
-from datetime import date
-from typing import Any
 
-from .domain import SIGNAL_TYPE
-from .geo import NutsGazetteer, nuts_codes, resolve_location
+from .config import SOURCE_SYSTEM
+from .geo import resolve
 
 
-class RejectedRecord(ValueError):
-    pass
-
-
-def pick(v, prefer=("eng", "deu")):
-    """Return (text, lang) from a TED multilingual value (dict of lang -> str|list) or a plain str/list."""
-    if isinstance(v, dict):
-        for lang in (*prefer, *v):
-            x = v.get(lang)
-            x = x[0] if isinstance(x, list) and x else x
-            if isinstance(x, str) and x.strip():
-                return x.strip(), lang
-        return None, None
-    if isinstance(v, list):
-        v = v[0] if v else None
-    return (v.strip(), None) if isinstance(v, str) and v.strip() else (None, None)
-
-
-def _list(v) -> list[str]:
+def _title(v):
     if isinstance(v, str):
-        v = [v]
-    return [x for x in v if isinstance(x, str)] if isinstance(v, list) else []
+        return v
+    if isinstance(v, dict) and v:
+        for k in ("eng", "ENG", "deu", "DEU"):
+            if v.get(k):
+                return v[k] if isinstance(v[k], str) else str(v[k][0])
+        first = next(iter(v.values()))
+        return first if isinstance(first, str) else (str(first[0]) if first else None)
+    return None
 
 
-def _date(v):
-    try:
-        return date.fromisoformat(str(v)[:10])
-    except ValueError:
-        return None
+def _as_list(v):
+    if v is None:
+        return []
+    return v if isinstance(v, list) else [v]
 
 
-def _num(v):
-    try:
-        return float(v)
-    except (TypeError, ValueError):
-        return None
+def _url(n, pid):
+    html = (n.get("links") or {}).get("htmlDirect") or {}
+    for k in ("ENG", "DEU"):
+        if html.get(k):
+            return html[k]
+    return f"https://ted.europa.eu/en/notice/-/detail/{pid}"
 
 
-def normalize(notice: Any, categories: list[str], gaz: NutsGazetteer) -> dict:
-    if not isinstance(notice, dict):
-        raise RejectedRecord("not_an_object")
-    pid = notice.get("publication-number")
-    if not isinstance(pid, str) or not pid.strip():
-        raise RejectedRecord("missing_publication_number")
-    pid = pid.strip()
-    title, lang = pick(notice.get("notice-title"))
-    pub = _date(notice.get("publication-date"))
-    cpv = sorted(set(_list(notice.get("classification-cpv"))))
-    places = _list(notice.get("place-of-performance"))
-    loc = resolve_location(places, gaz)
-    html = (notice.get("links") or {}).get("html") if isinstance(notice.get("links"), dict) else None
-    url, _ = pick(html, prefer=("ENG", "DEU"))
-    countries = _list(notice.get("place-of-performance-country-proc")) or _list(notice.get("buyer-country"))
-    buyer, _ = pick(notice.get("buyer-name"))
-    city, _ = pick(notice.get("place-of-performance-city-proc"))
-
+def normalize(notice, category, centroids):
+    """Return (record, issues). Returns (None, issues) if the notice has no identifier."""
     issues = []
+    pid = notice.get("publication-number")
+    if not pid or not isinstance(pid, str):
+        return None, ["missing publication-number"]
+    title = _title(notice.get("notice-title"))
     if not title:
-        issues.append("missing_title")
-    if pub is None:
-        issues.append("missing_or_invalid_publication_date")
-    if not cpv:
-        issues.append("missing_cpv")
-    if loc.status == "unresolved":
-        issues.append(f"location_unresolved:{loc.reason}")
-    if loc.warning:
-        issues.append(loc.warning)
-    invalid = {"missing_title", "missing_or_invalid_publication_date"} & set(issues)
+        issues.append("missing title")
+    pub = notice.get("publication-date")
+    pub = pub[:10] if isinstance(pub, str) and len(pub) >= 10 else None
+    if not pub:
+        issues.append("missing publication-date")
+    nuts = [c for c in _as_list(notice.get("place-of-performance")) if isinstance(c, str)]
+    country = next(iter(_as_list(notice.get("buyer-country"))), None) or (nuts[0][:2] if nuts else None)
+    x, y, status, note = resolve(nuts, centroids)
     rec = {
-        "source_system": "TED", "source_record_id": pid, "signal_type": SIGNAL_TYPE,
-        "signal_categories": sorted(set(categories)), "title": title, "title_lang": lang,
-        "publication_date": pub, "source_url": url or f"https://ted.europa.eu/en/notice/-/detail/{pid}",
-        "notice_type": notice.get("notice-type") if isinstance(notice.get("notice-type"), str) else None,
-        "buyer_name": buyer, "country_code": countries[0] if countries else None,
-        "nuts_codes": nuts_codes(places), "place_text": city, "cpv_codes": cpv,
-        "estimated_value": _num(notice.get("estimated-value-proc")),
-        "location_status": loc.status, "location_note": loc.reason,
-        "lon_4326": loc.lon, "lat_4326": loc.lat, "x_25832": loc.x, "y_25832": loc.y,
-        "quality_status": "invalid" if invalid else ("warning" if issues else "ok"),
-        "quality_issues": issues, "raw_payload": notice,
+        "source_system": SOURCE_SYSTEM, "source_record_id": pid, "signal_types": [category],
+        "title": title, "published_at": pub, "source_url": _url(notice, pid),
+        "country_code": country, "nuts_codes": nuts, "x": x, "y": y,
+        "geo_status": status, "geo_note": note, "raw": notice,
     }
-    body = {k: v for k, v in rec.items() if k != "raw_payload"}
-    rec["content_hash"] = hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
-    return rec
+    return rec, issues
+
+
+def content_hash(rec):
+    core = {k: rec[k] for k in ("signal_types", "title", "published_at", "source_url", "nuts_codes", "x", "y", "geo_status")}
+    return hashlib.sha256(json.dumps(core, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def merge(records):
+    """De-duplicate by source id, union signal types."""
+    out = {}
+    for r in records:
+        k = (r["source_system"], r["source_record_id"])
+        if k in out:
+            out[k]["signal_types"] = sorted(set(out[k]["signal_types"]) | set(r["signal_types"]))
+        else:
+            out[k] = r
+    for r in out.values():
+        r["content_hash"] = content_hash(r)
+    return list(out.values())
