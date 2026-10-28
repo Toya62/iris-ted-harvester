@@ -1,44 +1,89 @@
+"""Pipeline orchestration for harvesting and processing TED infrastructure notices."""
+
 from collections import Counter
 from datetime import date
-from typing import Any
+import logging
+from typing import Any, Dict, List, Optional, Tuple
 
 from . import client, config
 from .normalize import merge, normalize
 
+logger = logging.getLogger(__name__)
+
 
 def harvest(
     since: date,
-    until: date | None,
-    centroids: dict[str, tuple[float, float]],
-    per_category: int | None = None,
-    session=None,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Harvest notices across signal categories, normalize, de-duplicate and build quality report."""
-    records, issues, errors, raw_count = [], Counter(), {}, 0
-    for cat, q in config.queries(since, until).items():
+    until: Optional[date],
+    centroids: Dict[str, Tuple[float, float]],
+    per_category: Optional[int] = None,
+    session: Optional[Any] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """
+    Harvest public procurement notices across all target signal domains:
+      1. Query each category (grid cabling, transformers, data centres)
+      2. Normalize fields and resolve regional geometries
+      3. Track field validation issues
+      4. Deduplicate notices appearing in multiple searches and merge signal types
+      5. Construct concise execution quality report
+
+    Returns:
+      (merged_records, quality_report)
+    """
+    collected_records: List[Dict[str, Any]] = []
+    field_issues: Counter = Counter()
+    category_errors: Dict[str, str] = {}
+    raw_notice_count = 0
+
+    queries = config.queries(since, until)
+
+    for category, query_str in queries.items():
+        logger.info("Executing TED search for domain '%s'...", category)
         try:
-            for n in client.search(q, session=session, max_records=per_category):
-                raw_count += 1
-                rec, iss = normalize(n, cat, centroids)
-                for i in iss:
-                    issues[i] += 1
-                if rec:
-                    records.append(rec)
-        except client.TedError as e:
-            errors[cat] = str(e)
-    merged = merge(records)
-    report = {
-        "raw_notices": raw_count,
-        "unique_records": len(merged),
-        "by_signal_type": dict(Counter(t for r in merged for t in r["signal_types"])),
-        "geo": dict(
-            Counter(
-                r["geo_status"] if r["geo_status"] == "resolved" else f'{r["geo_status"]}: {r["geo_note"]}'
-                for r in merged
-            )
-        ),
-        "field_issues": dict(issues),
-        "category_errors": errors,
+            category_notice_count = 0
+            for raw_notice in client.search(query_str, session=session, max_records=per_category):
+                raw_notice_count += 1
+                category_notice_count += 1
+
+                normalized_record, issues = normalize(raw_notice, category, centroids)
+                for issue in issues:
+                    field_issues[issue] += 1
+
+                if normalized_record is not None:
+                    collected_records.append(normalized_record)
+
+            logger.info("Retrieved %d raw notices for domain '%s'", category_notice_count, category)
+
+        except client.TedError as exc:
+            logger.error("Failed to harvest category '%s': %s", category, exc)
+            category_errors[category] = str(exc)
+
+    # De-duplicate across categories (notices matching both transformers & cabling)
+    unique_records = merge(collected_records)
+
+    # Compute signal type distribution
+    signal_type_counts: Counter = Counter()
+    for record in unique_records:
+        for stype in record.get("signal_types", []):
+            signal_type_counts[stype] += 1
+
+    # Compute geographic resolution status distribution
+    geo_distribution: Counter = Counter()
+    for record in unique_records:
+        status = record.get("geo_status", "unresolved")
+        if status == "resolved":
+            geo_distribution[status] += 1
+        else:
+            note = record.get("geo_note", "no details")
+            geo_distribution[f"{status}: {note}"] += 1
+
+    quality_report: Dict[str, Any] = {
+        "raw_notices": raw_notice_count,
+        "unique_records": len(unique_records),
+        "by_signal_type": dict(signal_type_counts),
+        "geo": dict(geo_distribution),
+        "field_issues": dict(field_issues),
+        "category_errors": category_errors,
         "load": None,
     }
-    return merged, report
+
+    return unique_records, quality_report
