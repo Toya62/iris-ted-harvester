@@ -1,88 +1,62 @@
-"""TED Search API v3 client: token pagination, retries with backoff, strict response validation."""
-from __future__ import annotations
-
 import logging
-import random
 import time
-from typing import Any, Callable, Iterator
 
 import requests
 
-from .config import Settings
-from .domain import FIELDS
+from .config import API_URL, FIELDS
 
 log = logging.getLogger(__name__)
-RETRY_STATUS = {408, 425, 429, 500, 502, 503, 504}
 
 
-class TedApiError(RuntimeError):
-    """Exhausted retries or non-retryable API failure."""
+class TedError(Exception):
+    pass
 
 
-class TedFormatError(TedApiError):
-    """Response is not the documented v3 JSON (e.g. the obsolete /api/v2.0 URL answers HTTP 202 without JSON)."""
-
-
-class TedClient:
-    def __init__(self, settings: Settings, session=None, sleep: Callable[[float], None] = time.sleep):
-        self.s = settings
-        self.session = session or requests.Session()
-        self.session.headers.update({"User-Agent": settings.user_agent, "Accept": "application/json"})
-        self._sleep = sleep
-
-    def _post(self, body: dict[str, Any]) -> dict[str, Any]:
-        last: Exception | None = None
-        for attempt in range(self.s.max_retries + 1):
-            try:
-                resp = self.session.post(self.s.api_url, json=body, timeout=self.s.timeout_s)
-            except (requests.ConnectionError, requests.Timeout) as exc:
-                last = exc
-                log.warning("network error (attempt %d): %s", attempt + 1, exc)
+def _post(session, payload, retries=4, backoff=1.5):
+    last = None
+    for attempt in range(retries + 1):
+        try:
+            r = session.post(API_URL, json=payload, timeout=30)
+        except requests.RequestException as e:
+            last = e
+        else:
+            if r.status_code == 200:
+                if "json" not in r.headers.get("Content-Type", "").lower():
+                    raise TedError(f"non-JSON response ({r.headers.get('Content-Type')})")
+                try:
+                    data = r.json()
+                except ValueError as e:
+                    raise TedError(f"invalid JSON: {e}") from e
+                if not isinstance(data, dict) or not isinstance(data.get("notices"), list):
+                    raise TedError("malformed response: 'notices' list missing")
+                return data
+            if r.status_code in (429, 500, 502, 503, 504):
+                last = TedError(f"HTTP {r.status_code}")
             else:
-                if resp.status_code in RETRY_STATUS:
-                    last = TedApiError(f"HTTP {resp.status_code}")
-                    log.warning("retryable HTTP %s (attempt %d)", resp.status_code, attempt + 1)
-                    ra = resp.headers.get("Retry-After", "")
-                    if ra.isdigit() and attempt < self.s.max_retries:
-                        self._sleep(min(int(ra), 60))
-                        continue
-                elif resp.status_code != 200:
-                    msg = f"HTTP {resp.status_code} from {self.s.api_url}: {resp.text[:300]!r}"
-                    raise (TedFormatError if resp.status_code < 400 else TedApiError)(msg)
-                else:
-                    try:
-                        data = resp.json()
-                    except ValueError as exc:
-                        raise TedFormatError(f"Response is not JSON: {resp.text[:200]!r}") from exc
-                    if not isinstance(data, dict) or not isinstance(data.get("notices"), list):
-                        raise TedFormatError("Response has no 'notices' array")
-                    if data.get("timedOut"):
-                        last = TedApiError("API reported timedOut=true")
-                    else:
-                        return data
-            if attempt < self.s.max_retries:
-                self._sleep(self.s.backoff_base_s * (2 ** attempt) + random.uniform(0, 0.25))
-        raise TedApiError(f"Giving up after {self.s.max_retries + 1} attempts: {last}")
+                raise TedError(f"HTTP {r.status_code}: {r.text[:200]}")
+        if attempt < retries:
+            time.sleep(backoff ** attempt)
+    raise TedError(f"giving up after {retries + 1} attempts: {last}")
 
-    def search(self, query: str) -> Iterator[dict[str, Any]]:
-        token, seen, total, n = None, set(), None, 0
-        while True:
-            body: dict[str, Any] = {"query": query, "fields": list(FIELDS), "limit": self.s.page_limit,
-                                    "paginationMode": "ITERATION"}
-            if token:
-                body["iterationNextToken"] = token
-            data = self._post(body)
-            total = data.get("totalNoticeCount", total)
-            if not data["notices"]:
-                break
-            for notice in data["notices"]:
-                n += 1
-                yield notice
-            token = data.get("iterationNextToken")
-            if not token:
-                break
-            if token in seen:
-                raise TedApiError("Pagination token repeated; aborting")
-            seen.add(token)
-        if total is not None and n < total:
-            log.warning("fetched %d of %s reported notices", n, total)
+
+def search(query, session=None, page_size=100, max_records=None, max_pages=1000):
+    """Yield raw notices using token (iteration) pagination."""
+    session = session or requests.Session()
+    token, seen, pages = None, 0, 0
+    while pages < max_pages:
+        payload = {"query": query, "fields": FIELDS, "limit": page_size, "paginationMode": "ITERATION"}
+        if token:
+            payload["iterationNextToken"] = token
+        data = _post(session, payload)
+        pages += 1
+        notices = data["notices"]
+        if not notices:
+            return
+        for n in notices:
+            yield n
+            seen += 1
+            if max_records and seen >= max_records:
+                return
+        token = data.get("iterationNextToken")
+        if not token:
+            return

@@ -1,53 +1,63 @@
-from __future__ import annotations
-
 import argparse
 import json
 import logging
-import sys
-from datetime import date
-from pathlib import Path
+import os
+from collections import Counter
+from datetime import date, timedelta
 
-from .client import TedClient
-from .config import Settings
-from .geo import NutsGazetteer
-from .pipeline import run
-from .store import MemoryStore, PostgresStore
+from . import client, config
+from .geo import load_centroids
+from .normalize import merge, normalize
 
 
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="ted-harvester", description="IRIS-SIG-50 TED harvester")
-    ap.add_argument("--since", type=date.fromisoformat, help="first publication date; default DB watermark minus overlap")
-    ap.add_argument("--until", type=date.fromisoformat, help="last publication date (default today)")
-    ap.add_argument("--dry-run", action="store_true", help="no database; write JSONL/report only")
-    ap.add_argument("--init-db", action="store_true", help="apply sql/001_signal_ingest.sql first")
-    ap.add_argument("--countries", help="comma list of ISO alpha-3 codes or ALL")
-    ap.add_argument("--limit", type=int, help="cap number of records (demo)")
-    ap.add_argument("--out", default="out", help="output directory")
-    ap.add_argument("-v", "--verbose", action="store_true")
-    a = ap.parse_args(argv)
-    logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format="%(levelname)s %(message)s")
-    settings = Settings.from_env()
-    if a.countries:
-        c = () if a.countries.upper() == "ALL" else tuple(x.strip().upper() for x in a.countries.split(","))
-        settings = Settings(**{**settings.__dict__, "countries": c})
-    if a.dry_run:
-        store = MemoryStore()
-    else:
-        if not settings.database_url:
-            print("DATABASE_URL is not set (use --dry-run to run without a database)", file=sys.stderr)
-            return 2
-        store = PostgresStore(settings.database_url)
-        if a.init_db:
-            store.ensure_schema()
-    gaz = NutsGazetteer.from_csv(settings.nuts_centroids)
-    if not gaz.rows:
-        logging.warning("NUTS centroid table %s missing/empty: all locations will be unresolved", settings.nuts_centroids)
-    records, rep = run(settings, TedClient(settings), store, gaz, a.since, a.until, a.limit)
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    with (out / "records.jsonl").open("w", encoding="utf-8") as fh:
-        for r in records:
-            fh.write(json.dumps({k: v for k, v in r.items() if k != "raw_payload"}, ensure_ascii=False, default=str) + "\n")
-    (out / "report.json").write_text(json.dumps(rep, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps(rep, indent=2, ensure_ascii=False))
-    return 1 if rep["category_errors"] else 0
+def harvest(since, until, centroids, per_category, session=None):
+    records, issues, errors, raw_count = [], Counter(), {}, 0
+    for cat, q in config.queries(since, until).items():
+        try:
+            for n in client.search(q, session=session, max_records=per_category):
+                raw_count += 1
+                rec, iss = normalize(n, cat, centroids)
+                for i in iss:
+                    issues[i] += 1
+                if rec:
+                    records.append(rec)
+        except client.TedError as e:
+            errors[cat] = str(e)
+    merged = merge(records)
+    report = {
+        "raw_notices": raw_count, "unique_records": len(merged),
+        "by_signal_type": dict(Counter(t for r in merged for t in r["signal_types"])),
+        "geo": dict(Counter(r["geo_status"] if r["geo_status"] == "resolved" else f'{r["geo_status"]}: {r["geo_note"]}' for r in merged)),
+        "field_issues": dict(issues), "category_errors": errors, "load": None,
+    }
+    return merged, report
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description="Harvest TED notices into iris_staging.signal_ingest")
+    p.add_argument("--since", type=date.fromisoformat, default=date.today() - timedelta(days=7))
+    p.add_argument("--until", type=date.fromisoformat)
+    p.add_argument("--max-per-category", type=int, default=None)
+    p.add_argument("--centroids", default="data/nuts3_centroids.csv")
+    p.add_argument("--dry-run", action="store_true", help="do not touch the database")
+    p.add_argument("--output", default="output/sample.json")
+    a = p.parse_args(argv)
+    logging.basicConfig(level=logging.INFO)
+    records, report = harvest(a.since, a.until, load_centroids(a.centroids), a.max_per_category)
+    os.makedirs(os.path.dirname(a.output) or ".", exist_ok=True)
+    with open(a.output, "w", encoding="utf-8") as f:
+        json.dump([{k: v for k, v in r.items() if k != "raw"} for r in records], f, indent=1, ensure_ascii=False)
+    if not a.dry_run:
+        import psycopg
+        from .load import upsert
+        dsn = os.environ.get("TED_DSN")
+        if not dsn:
+            raise SystemExit("TED_DSN not set (use --dry-run to skip the database)")
+        with psycopg.connect(dsn) as conn:
+            report["load"] = upsert(conn, records)
+    print(json.dumps(report, indent=2))
+    return 1 if report["category_errors"] else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
