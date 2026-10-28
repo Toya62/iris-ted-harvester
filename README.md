@@ -2,8 +2,6 @@
 
 Harvests EU public procurement notices for grid cabling, transformers, and public data centres from Tenders Electronic Daily (TED) and loads them idempotently into `iris_staging.signal_ingest` (PostgreSQL 16 / PostGIS 3.4, EPSG:25832).
 
-Full assignment specifications are transcribed in [docs/ASSIGNMENT.md](file:///Users/toya/iris-ted-harvester/docs/ASSIGNMENT.md).
-
 ---
 
 ## 1. Data Source & Endpoint
